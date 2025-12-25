@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>付款获取txt文件</title>
+    <style>
+        body { text-align: center; margin-top: 50px; font-size: 18px; }
+        .pay-btn { background: #1677ff; color: white; padding: 15px 30px; border: none; border-radius: 5px; font-size: 20px; cursor: pointer; }
+        .txt-link { margin-top: 30px; display: none; color: #1677ff; font-size: 20px; }
+    </style>
+</head>
+<body>
+    <h1>付款后自动获取txt文件</h1>
+    <p>金额：1元（可自行修改）</p>
+    <!-- 付款按钮，后续替换成你的免签支付链接 -->
+    <button class="pay-btn" onclick="window.open('这里后续替换成码支付的付款链接', '_blank')">点击付款</button>
+    <!-- 付款成功后显示的txt下载链接 -->
+    <div class="txt-link" id="txtLink">✅ 付款成功！<a href="" id="downloadUrl">点击下载txt文件</a></div>
+
+    <!-- 监听云函数的回调（简化版：让用户付款后输入订单号查询） -->
+    <div style="margin-top: 30px;">
+        <input type="text" id="orderNo" placeholder="输入付款订单号查询">
+        <button onclick="checkOrder()">查询</button>
+    </div>
+
+    <script>
+        // 查询订单是否付款成功的函数（后续对接腾讯云函数）
+        function checkOrder() {
+            const orderNo = document.getElementById('orderNo').value;
+            // 后续替换成你的腾讯云函数地址
+            fetch('你的腾讯云函数地址?orderNo=' + orderNo)
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        document.getElementById('txtLink').style.display = 'block';
+                        document.getElementById('downloadUrl').href = data.txtUrl; // 显示txt下载链接
+                    } else {
+                        alert('订单未付款或不存在！');
+                    }
+                });
+        }
+    </script>
+</body>
+</html>
