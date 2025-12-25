@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html>
+<body style="text-align:center;padding:50px;">
+    <h2>支付成功！</h2>
+    <p>点击下方链接下载书籍TXT：</p>
+    <a id="downloadLink" href="" target="_blank" style="font-size:18px;color:blue;">下载链接</a>
+    <br><br>
+    <button onclick="window.location.href='index.html'">返回书籍列表</button>
+
+<script>
+const urlParams = new URLSearchParams(window.location.search);
+const downloadUrl = urlParams.get('url');
+document.getElementById('downloadLink').href = downloadUrl;
+</script>
+</body>
+</html>
