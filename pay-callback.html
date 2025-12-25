@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+<body>
+<script>
+// 1. 获取回调参数
+const urlParams = new URLSearchParams(window.location.search);
+const orderId = urlParams.get('orderId');
+const status = urlParams.get('status');
+const amount = urlParams.get('amount');
+const sign = urlParams.get('sign'); // 签名验证（防止伪造回调）
+
+// 2. 验证签名（用你的AppSecret）
+function verifySign() {
+    const appSecret = '699a1ba62c9746099c25250ff1afa4d0';
+    const rawStr = `orderId=${orderId}&status=${status}&amount=${amount}&appSecret=${appSecret}`;
+    // 计算MD5签名（站长付用MD5验证）
+    const md5Sign = CryptoJS.MD5(rawStr).toString();
+    return md5Sign === sign;
+}
+
+// 3. 加载CryptoJS（用于MD5签名验证）
+const script = document.createElement('script');
+script.src = 'https://cdn.jsdelivr.net/npm/crypto-js@4.2.0/crypto-js.min.js';
+script.onload = function() {
+    // 验证签名+金额+状态
+    if (verifySign() && status === 'success' && amount === '3.99') {
+        // 跳转到下载页
+        const downloadUrl = urlParams.get('url');
+        window.location.href = `download.html?order=${orderId}&url=${downloadUrl}`;
+    } else {
+        alert('支付验证失败，请重新付款！');
+        window.location.href = 'index.html';
+    }
+};
+document.head.appendChild(script);
+</script>
+</body>
+</html>
