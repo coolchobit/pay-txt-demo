@@ -2,43 +2,90 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <title>付款获取txt文件</title>
+    <title>付款后获取txt文件</title>
     <style>
-        body { text-align: center; margin-top: 50px; font-size: 18px; }
-        .pay-btn { background: #1677ff; color: white; padding: 15px 30px; border: none; border-radius: 5px; font-size: 20px; cursor: pointer; }
-        .txt-link { margin-top: 30px; display: none; color: #1677ff; font-size: 20px; }
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 400px;
+            margin: 50px auto;
+            text-align: center;
+        }
+        .pay-code {
+            margin: 20px 0;
+        }
+        .pay-code img {
+            width: 200px;
+            height: auto;
+        }
+        .query-area {
+            margin: 30px 0;
+        }
+        #orderNo {
+            padding: 8px;
+            width: 200px;
+            margin-right: 10px;
+        }
+        #checkBtn {
+            padding: 8px 15px;
+            cursor: pointer;
+        }
+        #result {
+            margin-top: 20px;
+            color: #333;
+        }
     </style>
 </head>
 <body>
-    <h1>付款后自动获取txt文件</h1>
-    <p>金额：1元（可自行修改）</p>
-    <!-- 付款按钮，后续替换成你的免签支付链接 -->
-    <button class="pay-btn" onclick="window.open('这里后续替换成码支付的付款链接', '_blank')">点击付款</button>
-    <!-- 付款成功后显示的txt下载链接 -->
-    <div class="txt-link" id="txtLink">✅ 付款成功！<a href="" id="downloadUrl">点击下载txt文件</a></div>
+    <h1>付款后获取txt文件</h1>
+    <p>金额：1元（微信扫码付款）</p>
 
-    <!-- 监听云函数的回调（简化版：让用户付款后输入订单号查询） -->
-    <div style="margin-top: 30px;">
-        <input type="text" id="orderNo" placeholder="输入付款订单号查询">
-        <button onclick="checkOrder()">查询</button>
+    <!-- 微信收款码（用你上传的wechat-pay.png） -->
+    <div class="pay-code">
+        <img src="wechat-pay.png" alt="微信收款码">
     </div>
 
+    <!-- 查询区域 -->
+    <div class="query-area">
+        <input type="text" id="orderNo" placeholder="输入任意订单号查询">
+        <button id="checkBtn">查询</button>
+    </div>
+
+    <!-- 结果显示区域 -->
+    <div id="result"></div>
+
     <script>
-        // 查询订单是否付款成功的函数（后续对接腾讯云函数）
-        function checkOrder() {
-            const orderNo = document.getElementById('orderNo').value;
-            // 后续替换成你的腾讯云函数地址
-            fetch('https://1254008924-45vlpcf4b7.ap-guangzhou.tencentscf.com/?orderNo=' + orderNo)
-                .then(res => res.json())
+        // 你的腾讯云函数URL（替换成你自己的）
+        const FUNCTION_URL = "https://1254008924-45vlpcf4b7.ap-guangzhou.tencentscf.com";
+
+        // 查询按钮点击事件
+        document.getElementById("checkBtn").addEventListener("click", () => {
+            const orderNo = document.getElementById("orderNo").value.trim();
+            if (!orderNo) {
+                document.getElementById("result").innerHTML = "❌ 请输入订单号";
+                return;
+            }
+
+            // 发送请求到云函数
+            fetch(`${FUNCTION_URL}?orderNo=${orderNo}`)
+                .then(response => {
+                    if (!response.ok) throw new Error("请求失败");
+                    return response.json();
+                })
                 .then(data => {
                     if (data.success) {
-                        document.getElementById('txtLink').style.display = 'block';
-                        document.getElementById('downloadUrl').href = data.txtUrl; // 显示txt下载链接
+                        // 显示下载链接
+                        document.getElementById("result").innerHTML = `
+                            ✅ 付款成功！
+                            <a href="${data.txtUrl}" target="_blank" style="color: #2196F3;">点击下载txt文件</a>
+                        `;
                     } else {
-                        alert('订单未付款或不存在！');
+                        document.getElementById("result").innerHTML = `❌ ${data.msg}`;
                     }
+                })
+                .catch(error => {
+                    document.getElementById("result").innerHTML = `❌ 出错了：${error.message}`;
                 });
-        }
+        });
     </script>
 </body>
 </html>
