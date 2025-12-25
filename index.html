@@ -106,34 +106,25 @@
 
     <!-- 支付逻辑脚本 -->
     <script>
-        // 1. 书籍数据（已填入你复制的Raw链接，无语法错误）
+        // 1. 书籍数据（语法100%正确，无缺失符号）
         const bookData = [
             {
                 id: 1,
-                title: "50年代的四九城下（1-472）",
+                title: "《50年代的四九城下（1-472）》",
                 chapter: "共472章，50年代背景小说",
                 desc: "50年代的四九城下相关内容，完整章节1-472，经典年代文。",
                 downloadUrl: "https://github.com/coolchobit/pay-txt-demo/raw/refs/heads/main/books/50%E5%B9%B4%E4%BB%A3%E7%9A%84%E5%9B%9B%E4%B9%9D%E5%9F%8E%E4%B8%8B%EF%BC%881-472%EF%BC%89.txt"
             }
-            {
-                id: 1,
-                title: "书名",
-                chapter: "章节",
-                desc: "简介",
-                downloadUrl: "txtraw地址"
-            }
         ];
 
-        // 2. 渲染书籍瀑布流（确保函数正常执行）
+        // 2. 渲染书籍瀑布流
         const bookContainer = document.getElementById('book-container');
         function renderBooks(books) {
             bookContainer.innerHTML = '';
-            // 先判断是否有书籍数据
             if (books.length === 0) {
-                bookContainer.innerHTML = '<div style="text-align:center; width:100%; color:#666;">暂无匹配的书籍</div>';
+                bookContainer.innerHTML = '<div style="text-align:center; width:100%; color:#666; padding:50px 0;">暂无匹配的书籍</div>';
                 return;
             }
-            // 渲染每本书记
             books.forEach(book => {
                 const card = document.createElement('div');
                 card.className = 'book-card';
@@ -147,7 +138,7 @@
                 bookContainer.appendChild(card);
             });
         }
-        // 页面加载后立即渲染书籍
+        // 页面加载立即渲染
         renderBooks(bookData);
 
         // 3. 搜索功能
@@ -159,7 +150,7 @@
             renderBooks(filtered);
         });
 
-        // 4. 付款函数（已整合配置）
+        // 4. 付款函数
         function createOrder(bookId, downloadUrl) {
             const orderId = Date.now() + '_' + bookId;
             fetch('https://api.zhanzhangfu.com/createOrder', {
@@ -181,7 +172,7 @@
                     alert('创建订单失败：' + data.msg);
                 }
             }).catch(err => {
-                alert('网络错误或接口不可用：' + err.message);
+                alert('网络错误：' + err.message);
             });
         }
 
