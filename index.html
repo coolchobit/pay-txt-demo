@@ -2,14 +2,13 @@
 function createOrder(bookId, downloadUrl) {
     // 生成唯一订单号（时间戳+书籍ID）
     const orderId = Date.now() + '_' + bookId;
-    // 调用站长付创建订单API（已填你的密钥）
+    // 调用站长付创建订单API（已用bec1656b2f83作为标识）
     fetch('https://api.zhanzhangfu.com/createOrder', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-            merchantId: '你的商户ID', // 注意：这里需要填你站长付后台的「商户ID」（在“账户中心”里找）
-            appKey: 'bec1656b2f83', // 你的AppKey
-            appSecret: '699a1ba62c9746099c25250ff1afa4d0', // 你的AppSecret
+            appKey: 'bec1656b2f83', // 核心：用这个替代商户ID
+            appSecret: '699a1ba62c9746099c25250ff1afa4d0', // 你的AppSecret不变
             orderId: orderId,
             amount: 3.99, // 固定价格
             subject: '书籍购买',
@@ -18,7 +17,7 @@ function createOrder(bookId, downloadUrl) {
         })
     }).then(res => res.json()).then(data => {
         if (data.code === 200) {
-            // 弹出支付二维码（这里需要你有显示二维码的弹窗逻辑，下面给你简单弹窗代码）
+            // 弹出支付二维码
             showQrCodeModal(data.qrCodeUrl);
         } else {
             alert('创建订单失败：' + data.msg);
@@ -26,14 +25,12 @@ function createOrder(bookId, downloadUrl) {
     });
 }
 
-// 简单的二维码弹窗函数
-// 二维码弹窗函数（修改后）
+// 二维码弹窗函数（已加金额偏差提示）
 function showQrCodeModal(qrUrl) {
     const mask = document.createElement('div');
     mask.style = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.7);display:flex;justify-content:center;align-items:center;z-index:999;';
     const qrBox = document.createElement('div');
     qrBox.style = 'background:white;padding:20px;border-radius:8px;text-align:center;';
-    // 新增金额提示：说明±0.01元偏差
     qrBox.innerHTML = `
         <h3>扫码支付（3.99元，允许±0.01元偏差）</h3>
         <img src="${qrUrl}" style="width:250px;height:250px;margin:20px 0;" />
