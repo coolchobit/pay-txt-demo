@@ -60,73 +60,54 @@
     <h1>付款后获取txt文件</h1>
     <p>金额：1元（微信扫码付款）</p>
 
-    <!-- 微信收款码（文件名必须是wechat-pay.png） -->
+    <!-- 微信收款码（文件名：wechat-pay.png） -->
     <div class="pay-code">
         <img src="wechat-pay.png" alt="微信收款码" onerror="this.src='https://via.placeholder.com/200?text=收款码未上传';">
     </div>
 
-    <!-- 查询区域（ID严格匹配JS代码） -->
+    <!-- 查询区域（ID严格匹配JS） -->
     <div class="query-area">
         <input type="text" id="orderNo" placeholder="输入任意订单号查询">
         <button id="checkBtn">查询</button>
     </div>
 
-    <!-- 结果显示区域 -->
+    <!-- 结果显示 -->
     <div id="result"></div>
 
     <script>
-        // 等待页面所有元素加载完成后再执行JS
-        document.addEventListener('DOMContentLoaded', function() {
-            // 替换为你的腾讯云函数URL（已填好你的地址）
-            const FUNCTION_URL = "https://1254008924-45vlpcf4b7.ap-guangzhou.tencentscf.com";
+        // 极简版逻辑：点击时实时获取值，无作用域问题
+        document.getElementById("checkBtn").onclick = function() {
+            // 1. 实时获取输入框值（去掉前后空格）
+            const orderNo = document.getElementById("orderNo").value.trim();
+            // 2. 控制台打印实际取值（调试用，可保留）
+            console.log("【调试】实际获取的订单号：", orderNo);
+            
+            // 3. 空值校验（逻辑绝对清晰）
+            if (!orderNo) {
+                document.getElementById("result").innerHTML = "❌ 请输入订单号";
+                return;
+            }
 
-            // 绑定查询按钮点击事件
-            const checkBtn = document.getElementById("checkBtn");
-            const orderNoInput = document.getElementById("orderNo");
-            const resultDiv = document.getElementById("result");
-
-            checkBtn.addEventListener("click", () => {
-                // 获取并去除订单号前后空格
-                const orderNo = orderNoInput.value.trim();
-                
-                // 空值校验
-                if (!orderNo) {
-                    resultDiv.innerHTML = "❌ 请输入订单号";
-                    return;
+            // 4. 发送请求到云函数（直接拼接参数，避免模板字符串问题）
+            const url = "https://1254008924-45vlpcf4b7.ap-guangzhou.tencentscf.com?orderNo=" + orderNo;
+            fetch(url, {
+                headers: { "Accept": "application/json" }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    document.getElementById("result").innerHTML = `
+                        ✅ 付款成功！
+                        <a href="${data.txtUrl}" target="_blank">点击下载txt文件</a>
+                    `;
+                } else {
+                    document.getElementById("result").innerHTML = `❌ ${data.msg || "查询失败"}`;
                 }
-
-                // 发送请求到云函数（带Accept请求头）
-                fetch(`${FUNCTION_URL}?orderNo=${orderNo}`, {
-                    method: 'GET',
-                    headers: {
-                        'Accept': 'application/json',
-                        'Content-Type': 'application/json'
-                    }
-                })
-                .then(response => {
-                    // 校验HTTP响应状态
-                    if (!response.ok) {
-                        throw new Error(`HTTP错误：${response.status}`);
-                    }
-                    return response.json();
-                })
-                .then(data => {
-                    // 处理云函数返回的结果
-                    if (data.success) {
-                        resultDiv.innerHTML = `
-                            ✅ 付款成功！
-                            <a href="${data.txtUrl}" target="_blank">点击下载txt文件</a>
-                        `;
-                    } else {
-                        resultDiv.innerHTML = `❌ ${data.msg || '查询失败'}`;
-                    }
-                })
-                .catch(error => {
-                    // 捕获所有请求错误并提示
-                    resultDiv.innerHTML = `❌ 请求失败：${error.message}`;
-                });
+            })
+            .catch(error => {
+                document.getElementById("result").innerHTML = `❌ 请求失败：${error.message}`;
             });
-        });
+        };
     </script>
 </body>
 </html>
