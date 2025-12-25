@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>书籍下载商城</title>
     <style>
-        /* 全局样式 */
+        /* 全局样式重置 */
         * {
             margin: 0;
             padding: 0;
@@ -16,7 +16,7 @@
             background-color: #f5f5f5;
             padding: 20px;
         }
-        /* 搜索栏 */
+        /* 搜索栏样式 */
         .search-box {
             max-width: 800px;
             margin: 0 auto 30px;
@@ -29,6 +29,11 @@
             border: 1px solid #ddd;
             border-radius: 6px;
             font-size: 16px;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        #search-input:focus {
+            border-color: #4299e1;
         }
         #search-btn {
             padding: 0 20px;
@@ -38,6 +43,10 @@
             border-radius: 6px;
             cursor: pointer;
             font-size: 16px;
+            transition: background-color 0.2s;
+        }
+        #search-btn:hover {
+            background-color: #3182ce;
         }
         /* 瀑布流布局 */
         .waterfall {
@@ -46,7 +55,7 @@
             max-width: 1200px;
             margin: 0 auto;
         }
-        /* 书籍卡片 */
+        /* 书籍卡片样式 */
         .book-card {
             break-inside: avoid;
             background-color: white;
@@ -54,6 +63,10 @@
             padding: 20px;
             margin-bottom: 20px;
             box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            transition: box-shadow 0.2s;
+        }
+        .book-card:hover {
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
         }
         .book-title {
             font-size: 18px;
@@ -91,6 +104,19 @@
             border-radius: 6px;
             cursor: pointer;
             font-size: 16px;
+            transition: background-color 0.2s;
+        }
+        .pay-btn:hover {
+            background-color: #c53030;
+        }
+        /* 适配移动端 */
+        @media (max-width: 768px) {
+            .waterfall {
+                column-count: 1;
+            }
+            .search-box {
+                padding: 0 10px;
+            }
         }
     </style>
 </head>
@@ -104,9 +130,8 @@
     <!-- 瀑布流书籍容器 -->
     <div class="waterfall" id="book-container"></div>
 
-    <!-- 支付逻辑脚本 -->
     <script>
-        // 1. 书籍数据（语法100%正确，无缺失符号）
+        // 1. 书籍数据（可直接添加更多书籍，注意语法格式）
         const bookData = [
             {
                 id: 1,
@@ -115,16 +140,30 @@
                 desc: "50年代的四九城下相关内容，完整章节1-472，经典年代文。",
                 downloadUrl: "https://github.com/coolchobit/pay-txt-demo/raw/refs/heads/main/books/50%E5%B9%B4%E4%BB%A3%E7%9A%84%E5%9B%9B%E4%B9%9D%E5%9F%8E%E4%B8%8B%EF%BC%881-472%EF%BC%89.txt"
             }
+            // 如需添加更多书籍，按以下格式复制（注意末尾逗号）
+            // ,{
+            //     id: 2,
+            //     title: "《第二本书名称》",
+            //     chapter: "章节描述",
+            //     desc: "书籍简介",
+            //     downloadUrl: "书籍下载链接"
+            // }
         ];
 
-        // 2. 渲染书籍瀑布流
+        // 2. 渲染书籍卡片到页面
         const bookContainer = document.getElementById('book-container');
         function renderBooks(books) {
             bookContainer.innerHTML = '';
+            // 无匹配书籍时的提示
             if (books.length === 0) {
-                bookContainer.innerHTML = '<div style="text-align:center; width:100%; color:#666; padding:50px 0;">暂无匹配的书籍</div>';
+                bookContainer.innerHTML = `
+                    <div style="text-align:center; width:100%; color:#666; padding:50px 0; break-inside: avoid;">
+                        暂无匹配的书籍，请更换关键词重试
+                    </div>
+                `;
                 return;
             }
+            // 循环生成书籍卡片
             books.forEach(book => {
                 const card = document.createElement('div');
                 card.className = 'book-card';
@@ -138,24 +177,56 @@
                 bookContainer.appendChild(card);
             });
         }
-        // 页面加载立即渲染
-        renderBooks(bookData);
 
-        // 3. 搜索功能
+        // 页面加载完成后，默认渲染所有书籍
+        window.onload = function() {
+            renderBooks(bookData);
+        };
+
+        // 3. 搜索功能（支持名称/章节模糊搜索）
         document.getElementById('search-btn').addEventListener('click', () => {
             const keyword = document.getElementById('search-input').value.trim().toLowerCase();
-            const filtered = bookData.filter(book => 
-                book.title.toLowerCase().includes(keyword) || book.chapter.includes(keyword)
+            // 无搜索关键词时，重新渲染所有书籍
+            if (!keyword) {
+                renderBooks(bookData);
+                return;
+            }
+            // 筛选匹配的书籍
+            const filteredBooks = bookData.filter(book => 
+                book.title.toLowerCase().includes(keyword) || 
+                book.chapter.toLowerCase().includes(keyword)
             );
-            renderBooks(filtered);
+            renderBooks(filteredBooks);
+        });
+        // 支持按回车键搜索
+        document.getElementById('search-input').addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                document.getElementById('search-btn').click();
+            }
         });
 
-        // 4. 付款函数
+        // 4. 创建支付订单（优化错误日志，方便排查问题）
         function createOrder(bookId, downloadUrl) {
+            // 生成唯一订单号（时间戳+书籍ID）
             const orderId = Date.now() + '_' + bookId;
+            // 打印请求参数到控制台（F12 -> Console 查看）
+            console.log('===== 支付请求参数 =====', {
+                appKey: 'bec1656b2f83',
+                appSecret: '699a1ba62c9746099c25250ff1afa4d0',
+                orderId: orderId,
+                amount: 3.99,
+                subject: '书籍购买',
+                callbackUrl: 'https://coolchobit.github.io/pay-txt-demo/pay-callback.html',
+                returnUrl: `https://coolchobit.github.io/pay-txt-demo/download.html?order=${orderId}&url=${downloadUrl}`
+            });
+
+            // 发起支付订单请求
             fetch('https://api.zhanzhangfu.com/createOrder', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                },
                 body: JSON.stringify({
                     appKey: 'bec1656b2f83',
                     appSecret: '699a1ba62c9746099c25250ff1afa4d0',
@@ -164,30 +235,81 @@
                     subject: '书籍购买',
                     callbackUrl: 'https://coolchobit.github.io/pay-txt-demo/pay-callback.html',
                     returnUrl: `https://coolchobit.github.io/pay-txt-demo/download.html?order=${orderId}&url=${downloadUrl}`
-                })
-            }).then(res => res.json()).then(data => {
+                }),
+                // 跨域请求时携带凭证（可选，根据接口要求）
+                credentials: 'omit'
+            })
+            .then(response => {
+                // 打印接口响应状态（200=成功，4xx/5xx=错误）
+                console.log('===== 接口响应状态 =====', response.status, response.statusText);
+                // 非200状态直接抛出错误
+                if (!response.ok) {
+                    throw new Error(`接口返回错误状态码：${response.status}（${response.statusText}）`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log('===== 接口返回数据 =====', data);
+                // 接口返回成功
                 if (data.code === 200) {
                     showQrCodeModal(data.qrCodeUrl);
                 } else {
-                    alert('创建订单失败：' + data.msg);
+                    alert(`创建订单失败：${data.msg || '未知错误'}`);
                 }
-            }).catch(err => {
-                alert('网络错误：' + err.message);
+            })
+            .catch(error => {
+                // 打印详细错误信息到控制台
+                console.error('===== 支付请求失败详情 =====', error);
+                // 区分跨域错误和其他错误，给出友好提示
+                if (error.message.includes('CORS') || error.message === 'Failed to fetch') {
+                    alert('网络错误：跨域访问被拦截\n解决方法：联系接口开发者配置CORS，允许 coolchobit.github.io 访问');
+                } else {
+                    alert(`创建订单失败：${error.message}`);
+                }
             });
         }
 
-        // 5. 二维码弹窗
+        // 5. 显示支付二维码弹窗
         function showQrCodeModal(qrUrl) {
+            // 创建遮罩层
             const mask = document.createElement('div');
-            mask.style = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.7);display:flex;justify-content:center;align-items:center;z-index:999;';
-            const qrBox = document.createElement('div');
-            qrBox.style = 'background:white;padding:20px;border-radius:8px;text-align:center;';
-            qrBox.innerHTML = `
-                <h3>扫码支付（3.99元，允许±0.01元偏差）</h3>
-                <img src="${qrUrl}" style="width:250px;height:250px;margin:20px 0;" />
-                <p>支付金额为3.98/3.99/4.00元均有效</p>
-                <button onclick="document.body.removeChild(this.parentElement.parentElement)">关闭</button>
+            mask.style = `
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(0,0,0,0.7);
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                z-index: 9999;
             `;
+            // 创建二维码容器
+            const qrBox = document.createElement('div');
+            qrBox.style = `
+                background: white;
+                padding: 25px;
+                border-radius: 10px;
+                text-align: center;
+                max-width: 320px;
+                width: 90%;
+            `;
+            qrBox.innerHTML = `
+                <h3 style="margin-bottom: 20px; color: #333;">扫码支付（3.99元）</h3>
+                <img src="${qrUrl}" style="width: 250px; height: 250px; margin: 0 auto 15px; display: block;" alt="支付二维码">
+                <p style="color: #666; margin-bottom: 20px;">支付金额允许±0.01元偏差（3.98/3.99/4.00元均有效）</p>
+                <button style="
+                    padding: 8px 20px;
+                    background: #4299e1;
+                    color: white;
+                    border: none;
+                    border-radius: 6px;
+                    cursor: pointer;
+                    font-size: 14px;
+                " onclick="document.body.removeChild(this.parentElement.parentElement)">关闭</button>
+            `;
+            // 把二维码容器添加到遮罩层，再添加到页面
             mask.appendChild(qrBox);
             document.body.appendChild(mask);
         }
