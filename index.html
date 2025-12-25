@@ -83,10 +83,10 @@
             console.log("【调试】实际获取的订单号：", orderNo);
             
             // 3. 空值校验（逻辑绝对清晰）
-            if (!orderNo) {
-                document.getElementById("result").innerHTML = "❌ 请输入订单号";
-                return;
-            }
+            //if (!orderNo) {
+            //    document.getElementById("result").innerHTML = "❌ 请输入订单号";
+            //    return;
+            //}
 
             // 4. 发送请求到云函数（直接拼接参数，避免模板字符串问题）
             const url = "https://1254008924-45vlpcf4b7.ap-guangzhou.tencentscf.com?orderNo=" + orderNo;
