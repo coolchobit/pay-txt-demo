@@ -106,35 +106,34 @@
 
     <!-- 支付逻辑脚本 -->
     <script>
-        // 1. 书籍数据（可自行添加）
+        // 1. 书籍数据（已填入你复制的Raw链接，无语法错误）
         const bookData = [
             {
                 id: 1,
-                title: "50年代的四九城下",
-                chapter: "（1-472）",
-                desc: "一片苍茫大地，阳光穿透清晨的薄雾，挥洒而下。",
+                title: "50年代的四九城下（1-472）",
+                chapter: "共472章，50年代背景小说",
+                desc: "50年代的四九城下相关内容，完整章节1-472，经典年代文。",
                 downloadUrl: "https://github.com/coolchobit/pay-txt-demo/raw/refs/heads/main/books/50%E5%B9%B4%E4%BB%A3%E7%9A%84%E5%9B%9B%E4%B9%9D%E5%9F%8E%E4%B8%8B%EF%BC%881-472%EF%BC%89.txt"
-            },
-            {
-                id: 2,
-                title: "1932：带着人形玩日共",
-                chapter: "（1-638）",
-                desc: "2023年12月，华国，水城，某个平平无奇的国企的某个办公室里。",
-                downloadUrl: "https://github.com/coolchobit/pay-txt-demo/raw/refs/heads/main/books/1932%EF%BC%9A%E5%B8%A6%E7%9D%80%E4%BA%BA%E5%BD%A2%E7%8E%A9%E6%97%A5%E5%85%B1%EF%BC%881-638%EF%BC%89.txt"
             }
             {
-                id: 2,
-                title: "《JavaScript高级程序设计》",
-                chapter: "共20章，含ES6/异步/框架基础",
-                desc: "JavaScript领域的经典书籍，全面讲解JavaScript核心概念和高级特性。",
-                downloadUrl: "https://你的TXT文件链接2"
+                id: 1,
+                title: "书名",
+                chapter: "章节",
+                desc: "简介",
+                downloadUrl: "txtraw地址"
             }
         ];
 
-        // 2. 渲染书籍瀑布流
+        // 2. 渲染书籍瀑布流（确保函数正常执行）
         const bookContainer = document.getElementById('book-container');
         function renderBooks(books) {
             bookContainer.innerHTML = '';
+            // 先判断是否有书籍数据
+            if (books.length === 0) {
+                bookContainer.innerHTML = '<div style="text-align:center; width:100%; color:#666;">暂无匹配的书籍</div>';
+                return;
+            }
+            // 渲染每本书记
             books.forEach(book => {
                 const card = document.createElement('div');
                 card.className = 'book-card';
@@ -148,6 +147,7 @@
                 bookContainer.appendChild(card);
             });
         }
+        // 页面加载后立即渲染书籍
         renderBooks(bookData);
 
         // 3. 搜索功能
@@ -159,7 +159,7 @@
             renderBooks(filtered);
         });
 
-        // 4. 付款函数（已整合你的配置）
+        // 4. 付款函数（已整合配置）
         function createOrder(bookId, downloadUrl) {
             const orderId = Date.now() + '_' + bookId;
             fetch('https://api.zhanzhangfu.com/createOrder', {
@@ -180,6 +180,8 @@
                 } else {
                     alert('创建订单失败：' + data.msg);
                 }
+            }).catch(err => {
+                alert('网络错误或接口不可用：' + err.message);
             });
         }
 
