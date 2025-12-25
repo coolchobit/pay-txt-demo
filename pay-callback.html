@@ -6,29 +6,28 @@
 const urlParams = new URLSearchParams(window.location.search);
 const orderId = urlParams.get('orderId');
 const status = urlParams.get('status');
-const amount = urlParams.get('amount');
-const sign = urlParams.get('sign'); // 签名验证（防止伪造回调）
+const amount = urlParams.get('amount'); // 实际支付金额（3.98/3.99/4.00）
+const sign = urlParams.get('sign');
 
 // 2. 验证签名（用你的AppSecret）
 function verifySign() {
     const appSecret = '699a1ba62c9746099c25250ff1afa4d0';
     const rawStr = `orderId=${orderId}&status=${status}&amount=${amount}&appSecret=${appSecret}`;
-    // 计算MD5签名（站长付用MD5验证）
     const md5Sign = CryptoJS.MD5(rawStr).toString();
     return md5Sign === sign;
 }
 
-// 3. 加载CryptoJS（用于MD5签名验证）
+// 3. 加载CryptoJS并验证
 const script = document.createElement('script');
 script.src = 'https://cdn.jsdelivr.net/npm/crypto-js@4.2.0/crypto-js.min.js';
 script.onload = function() {
-    // 验证签名+金额+状态
-    if (verifySign() && status === 'success' && amount === '3.99') {
-        // 跳转到下载页
+    // 核心修改：兼容3.98/3.99/4.00元三个金额
+    const validAmounts = ['3.98', '3.99', '4.00'];
+    if (verifySign() && status === 'success' && validAmounts.includes(amount)) {
         const downloadUrl = urlParams.get('url');
         window.location.href = `download.html?order=${orderId}&url=${downloadUrl}`;
     } else {
-        alert('支付验证失败，请重新付款！');
+        alert('支付金额错误或验证失败！请支付3.99元（允许±0.01元偏差）');
         window.location.href = 'index.html';
     }
 };
