@@ -28,7 +28,7 @@
         function checkOrder() {
             const orderNo = document.getElementById('orderNo').value;
             // 后续替换成你的腾讯云函数地址
-            fetch('你的腾讯云函数地址?orderNo=' + orderNo)
+            fetch('https://1254008924-45vlpcf4b7.ap-guangzhou.tencentscf.com/?orderNo=' + orderNo)
                 .then(res => res.json())
                 .then(data => {
                     if (data.success) {
